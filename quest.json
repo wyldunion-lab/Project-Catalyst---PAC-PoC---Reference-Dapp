@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "questId": "q.focus.sprint.4w",
+    "name": "4-Week Focus Sprint",
+    "version": "v1.0.0",
+    "description": "Do 5 focused sessions each week for 4 weeks.",
+    "visibility": "invite-only",
+    "tags": ["focus", "study", "habits"]
+  },
+  "time": {
+    "start": "2026-01-01T00:00:00Z",
+    "end": "2026-01-29T00:00:00Z",
+    "milestoneFrequency": { "type": "count-per-window", "targetPerWindow": 5, "windowDays": 7, "gracePerWindow": 1 },
+    "submissionWindows": [{ "openOffsetMin": -120, "closeOffsetMin": 240 }],
+    "finalizationWindowHours": 48
+  },
+  "progress": {
+    "eventType": "study-session",
+    "minEvidence": ["count-threshold-proof", "deadline-proof", "oracle-signed-fact"],
+    "evidencePolicy": { "allowSelfAttestation": true, "requireOracle": true, "requireDeviceTEE": false }
+  },
+  "verification": {
+    "zkCircuits": [
+      { "circuitId": "count-threshold-v1", "vkId": "vk-count-v1", "version": "1.0.0", "publicSignals": ["questHash","windowIndex","target","met"] },
+      { "circuitId": "deadline-v1",        "vkId": "vk-deadline-v1","version": "1.0.0", "publicSignals": ["questHash","submissionEpoch","deadlineEpoch","ok"] },
+      { "circuitId": "oracle-fact-v1",     "vkId": "vk-oracle-v1",  "version": "1.0.0", "publicSignals": ["questHash","oracleId","ok"] }
+    ],
+    "oracles": [
+      { "id": "fitkit", "pubkey": "ed25519:ABCD...", "role": "fitness", "rateLimitPerDay": 20 }
+    ],
+    "antiSybil": { "requireDIDUniqueness": true, "minReputationTier": "bronze" }
+  },
+  "economics": {
+    "stake": { "currency": "ADA", "min": 10, "max": 100, "slashCurve": "linear" },
+    "payoutMode": "PPC",
+    "payoutWeights": { "completionWeight": 0.8, "reputationWeight": 0.2 },
+    "fees": { "joinBps": 50, "successBps": 50 },
+    "rewardPool": { "token": "PACT", "amount": 10000 }
+  },
+  "teams": { "enabled": false },
+  "disclosure": {
+    "defaultVisibility": "private",
+    "viewingKeyPolicy": "per-mentor",
+    "exportableFacts": ["percentComplete", "badgeTier"]
+  },
+  "settlement": {
+    "successCriteria": { "minWindowsCompletedPct": 70, "requireFinalProof": true },
+    "disputePolicy": { "allowAppeals": true, "appealWindowHours": 24 }
+  }
+}
