@@ -1,0 +1,100 @@
+{
+  "player": "addr_test1qp...abcd",
+  "questHash": "<0x... from canonicalizer>",
+  "submissions": [
+    {
+      "circuitId": "count-threshold-v1",
+      "vkId": "vk-count-v1",
+      "publicSignals": { "questHash": "<0x...>", "windowIndex": 0, "target": 5, "met": 1 },
+      "proof": "<bytes_w0>",
+      "nullifiers": ["0xw0e1","0xw0e2","0xw0e3","0xw0e4","0xw0e5"],
+      "merkleRoots": ["0xroot_w0"],
+      "nonce": "0xaaa1",
+      "timestampHint": 1761933600
+    },
+    {
+      "circuitId": "deadline-v1",
+      "vkId": "vk-deadline-v1",
+      "publicSignals": { "questHash": "<0x...>", "submissionEpoch": 1761933600, "deadlineEpoch": 1762214400, "ok": 1 },
+      "proof": "<bytes_deadline_w0>",
+      "nullifiers": ["0xdl_w0"],
+      "merkleRoots": [],
+      "nonce": "0xbbb2",
+      "timestampHint": 1761933600
+    },
+
+    {
+      "circuitId": "count-threshold-v1",
+      "vkId": "vk-count-v1",
+      "publicSignals": { "questHash": "<0x...>", "windowIndex": 1, "target": 5, "met": 0 },
+      "proof": "<bytes_w1>",
+      "nullifiers": ["0xw1e1","0xw1e2","0xw1e3","0xw1e4"],
+      "merkleRoots": ["0xroot_w1"],
+      "nonce": "0xaaa2",
+      "timestampHint": 1762538400
+    },
+    {
+      "circuitId": "deadline-v1",
+      "vkId": "vk-deadline-v1",
+      "publicSignals": { "questHash": "<0x...>", "submissionEpoch": 1762538400, "deadlineEpoch": 1762819200, "ok": 1 },
+      "proof": "<bytes_deadline_w1>",
+      "nullifiers": ["0xdl_w1"],
+      "merkleRoots": [],
+      "nonce": "0xbbb3",
+      "timestampHint": 1762538400
+    },
+
+    {
+      "circuitId": "count-threshold-v1",
+      "vkId": "vk-count-v1",
+      "publicSignals": { "questHash": "<0x...>", "windowIndex": 2, "target": 5, "met": 1 },
+      "proof": "<bytes_w2>",
+      "nullifiers": ["0xw2e1","0xw2e2","0xw2e3","0xw2e4","0xw2e5"],
+      "merkleRoots": ["0xroot_w2"],
+      "nonce": "0xaaa3",
+      "timestampHint": 1763143200
+    },
+    {
+      "circuitId": "deadline-v1",
+      "vkId": "vk-deadline-v1",
+      "publicSignals": { "questHash": "<0x...>", "submissionEpoch": 1763143200, "deadlineEpoch": 1763424000, "ok": 1 },
+      "proof": "<bytes_deadline_w2>",
+      "nullifiers": ["0xdl_w2"],
+      "merkleRoots": [],
+      "nonce": "0xbbb4",
+      "timestampHint": 1763143200
+    },
+
+    {
+      "circuitId": "count-threshold-v1",
+      "vkId": "vk-count-v1",
+      "publicSignals": { "questHash": "<0x...>", "windowIndex": 3, "target": 5, "met": 1 },
+      "proof": "<bytes_w3>",
+      "nullifiers": ["0xw3e1","0xw3e2","0xw3e3","0xw3e4","0xw3e5"],
+      "merkleRoots": ["0xroot_w3"],
+      "nonce": "0xaaa4",
+      "timestampHint": 1763748000
+    },
+    {
+      "circuitId": "deadline-v1",
+      "vkId": "vk-deadline-v1",
+      "publicSignals": { "questHash": "<0x...>", "submissionEpoch": 1763748000, "deadlineEpoch": 1764028800, "ok": 1 },
+      "proof": "<bytes_deadline_w3>",
+      "nullifiers": ["0xdl_w3"],
+      "merkleRoots": [],
+      "nonce": "0xbbb5",
+      "timestampHint": 1763748000
+    },
+
+    {
+      "circuitId": "oracle-fact-v1",
+      "vkId": "vk-oracle-v1",
+      "publicSignals": { "questHash": "<0x...>", "oracleId": "fitkit", "ok": 1 },
+      "proof": "<bytes_oracle_attest>",
+      "nullifiers": ["0xor1"],
+      "merkleRoots": [],
+      "nonce": "0xccc6",
+      "timestampHint": 1763748000
+    }
+  ]
+}
