@@ -34,8 +34,4 @@ scripts/            # helper to hash the quest rules
 - Non-finite numbers and `undefined` are stripped before hashing.
 - Hash is **blake2b-256** of canonical UTF-8 JSON (hex prefixed with `0x`).
 
-## Next steps
 
-- Wire this into your Midnight contract mock and a prover stub.
-- Add verifiers for `count-threshold-v1`, `deadline-v1`, and `oracle-fact-v1` or mock them in tests.
-- Extend vectors to include multiple players and team quests.
