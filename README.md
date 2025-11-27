@@ -27,6 +27,33 @@ vectors/            # sample quest, events, proofs, expected contract state
 test/               # vitest tests
 scripts/            # helper to hash the quest rules
 ```
+stateDiagram-v2
+    [*] --> Deposit
+    Deposit: depositStake()
+    Deposit --> SeasonPassActive: Season Pass NFT minted\nDeposit locked
+
+    state SeasonPassActive {
+        [*] --> QuestInitialized
+
+        QuestInitialized: createQuest()
+        QuestInitialized --> InProgress: submitDailyCheckIn()\n(first check-in)
+
+        InProgress: submitDailyCheckIn()\n(1..N check-ins)
+        InProgress --> AwaitingProof: all check-ins submitted\n(totalDays reached)
+
+        AwaitingProof: submitZKProof()
+        AwaitingProof --> CompletedSuccess: ZK proof valid\n(threshold met)
+        AwaitingProof --> CompletedFailure: ZK proof invalid\n(threshold not met)
+
+        CompletedSuccess: settleQuest()\nDeposit returned to owner
+        CompletedFailure: settleQuest()\nDeposit moved to reward pool
+
+        CompletedSuccess --> [*]
+        CompletedFailure --> [*]
+    }
+
+    SeasonPassActive --> WithdrawSeason: withdrawStake()\n(optional, if rules allow)
+    WithdrawSeason --> [*]
 
 ## Notes
 
