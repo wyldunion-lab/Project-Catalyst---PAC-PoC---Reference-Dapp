@@ -1,0 +1,15 @@
+{
+  "player": "addr_test1qp...abcd",
+  "joined": true,
+  "stakeADA": 50,
+  "windowsMet": 3,
+  "windowsTotal": 4,
+  "completionPct": 0.75,
+  "eligibleToSettle": true,
+  "settled": true,
+  "claimableRewards": {
+    "PACT": 6100,
+    "ADAStakeReturn": 50
+  },
+  "events": ["MilestoneMet[0]","MilestoneMissed[1]","MilestoneMet[2]","MilestoneMet[3]"]
+}
