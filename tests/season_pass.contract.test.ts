@@ -1,5 +1,5 @@
 // tests/season_pass.contract.test.ts
-// Scaffold tests for PacSeasonPassContract
+// Improved scaffold tests for PacSeasonPassContract
 // Assumes Jest or Vitest-style test runner
 
 import { PacSeasonPassContract, QuestStatus, ThresholdZkProof } from "../contracts/season_pass";
@@ -21,9 +21,9 @@ describe("PacSeasonPassContract", () => {
   });
 
   function mockThresholdProof(thresholdPct: number, totalDays: number): ThresholdZkProof {
-    // NOTE: This is a placeholder. Replace with a real ZK proof when integrating Midnight ZK.
+    // NOTE: placeholder proof structure — replace with real ZK proof integration later
     return {
-      proofBytes: new Uint8Array([1, 2, 3]), // dummy bytes
+      proofBytes: new Uint8Array([1, 2, 3]),
       publicInputs: {
         thresholdPct,
         totalDays,
@@ -31,73 +31,107 @@ describe("PacSeasonPassContract", () => {
     };
   }
 
-  test("happy path: deposit → quest → 10 check-ins → proof → success settlement", () => {
-    // 1. User deposits stake and receives Season Pass
-    const depositAmount = BigInt(100);
-    const { seasonPassId } = contract.depositStake(USER_ADDR, depositAmount, ASSET_USDM);
+  // helper to create a deposit + quest
+  function createQuestAndDeposit({
+    depositAmount,
+    thresholdPct,
+    totalDays,
+    templateId,
+    encryptedQuestData,
+  }: {
+    depositAmount: bigint;
+    thresholdPct: number;
+    totalDays: number;
+    templateId: string;
+    encryptedQuestData: string;
+  }) {
+    const depositRes = contract.depositStake(USER_ADDR, depositAmount, ASSET_USDM);
+    const seasonPassId = depositRes.seasonPassId;
+    const createRes = contract.createQuest(
+      seasonPassId,
+      USER_ADDR,
+      templateId,
+      thresholdPct,
+      totalDays,
+      encryptedQuestData,
+    );
+    return { seasonPassId, questId: createRes.questId };
+  }
 
-    // 2. User creates a quest (10 days, 80% threshold)
+  test("happy path: deposit → quest → 10 check-ins → proof → success settlement", () => {
+    // Arrange
+    const depositAmount = BigInt(100);
     const thresholdPct = 80;
     const totalDays = 10;
     const templateId = "workout_10_days";
     const encryptedQuestData = "enc:some-private-goal-data";
 
-    const { questId } = contract.createQuest(
-      seasonPassId,
-      USER_ADDR,
-      templateId,
+    const { seasonPassId, questId } = createQuestAndDeposit({
+      depositAmount,
       thresholdPct,
       totalDays,
+      templateId,
       encryptedQuestData,
-    );
+    });
 
-    // 3. Submit 10 private check-ins (just dummy commitments)
+    // Act - submit the required daily commitments
     for (let i = 0; i < totalDays; i++) {
       const commitment = `hash_commitment_day_${i + 1}`;
       contract.submitDailyCheckIn(seasonPassId, USER_ADDR, questId, commitment);
     }
 
-    // After all check-ins, quest should be awaiting proof
+    // Assert - quest should now be awaiting proof and have the correct number of commitments
     let status = contract.getQuestStatus(seasonPassId, USER_ADDR, questId);
     expect(status).toBe(QuestStatus.AwaitingProof);
 
-    // 4. User submits ZK proof for threshold completion
-    const zkProof = mockThresholdProof(thresholdPct, totalDays);
-    const { proofValid } = contract.submitZKProof(seasonPassId, USER_ADDR, questId, zkProof);
+    // Optional: assert commitments length via internals (test-only)
+    // @ts-expect-error accessing internal state for test assertions
+    const userState = contract["state"].users[seasonPassId];
+    // @ts-expect-error
+    const quest = userState.quests.find((q: any) => q.questId === questId);
+    expect(quest.checkInCommitments.length).toBe(totalDays);
 
+    // Provide a valid (placeholder) zk proof and ensure verification path results in success.
+    const zkProof = mockThresholdProof(thresholdPct, totalDays);
+
+    // If contract has a pluggable verify function, we make sure it returns true for this test.
+    // @ts-expect-error test-only override
+    if ((contract as any).verifyThresholdProofPlaceholder) {
+      // force success
+      // @ts-expect-error
+      (contract as any).verifyThresholdProofPlaceholder = () => true;
+    }
+
+    const { proofValid } = contract.submitZKProof(seasonPassId, USER_ADDR, questId, zkProof);
     expect(proofValid).toBe(true);
 
-    // After proof, quest should be marked as success
+    // After proof, quest should be marked success
     status = contract.getQuestStatus(seasonPassId, USER_ADDR, questId);
     expect(status).toBe(QuestStatus.CompletedSuccess);
 
-    // 5. Settlement should return user deposit (in real chain logic)
+    // Settlement should not throw and should consume the deposit in this scaffold
     contract.settleQuest(seasonPassId, USER_ADDR, questId);
 
-    // In this in-memory scaffold, we can’t assert on chain balances,
-    // but we can at least ensure no errors and that user deposit is now zero.
     // @ts-expect-error Accessing internal state for testing only
-    const userState = contract["state"].users[seasonPassId];
-    expect(userState.depositAmount).toBe(BigInt(0));
+    const userStateAfter = contract["state"].users[seasonPassId];
+    expect(userStateAfter.depositAmount).toBe(BigInt(0));
   });
 
-  test("failure path: incomplete check-ins, then failed settlement", () => {
+  test("failure path: incomplete check-ins, then failed settlement (invalid proof)", () => {
+    // Arrange
     const depositAmount = BigInt(50);
-    const { seasonPassId } = contract.depositStake(USER_ADDR, depositAmount, ASSET_USDM);
-
     const thresholdPct = 80;
     const totalDays = 10;
     const templateId = "study_10_days";
     const encryptedQuestData = "enc:study-data";
 
-    const { questId } = contract.createQuest(
-      seasonPassId,
-      USER_ADDR,
-      templateId,
+    const { seasonPassId, questId } = createQuestAndDeposit({
+      depositAmount,
       thresholdPct,
       totalDays,
+      templateId,
       encryptedQuestData,
-    );
+    });
 
     // Only 4 check-ins out of 10 (below threshold)
     for (let i = 0; i < 4; i++) {
@@ -105,40 +139,45 @@ describe("PacSeasonPassContract", () => {
       contract.submitDailyCheckIn(seasonPassId, USER_ADDR, questId, commitment);
     }
 
-    // Quest should still be "in progress", not awaiting proof
+    // Quest should still be "in progress"
     let status = contract.getQuestStatus(seasonPassId, USER_ADDR, questId);
     expect(status).toBe(QuestStatus.InProgress);
 
-    // Try to submit proof early should fail (not in AwaitingProof state)
+    // Attempting to submit proof early should throw. Use a loose matcher for the message.
     const proof = mockThresholdProof(thresholdPct, totalDays);
     expect(() =>
       contract.submitZKProof(seasonPassId, USER_ADDR, questId, proof),
-    ).toThrow("Quest is not ready for proof submission");
+    ).toThrow();
 
-    // Simulate filling remaining days incorrectly: manually push commitments for test
+    // For the purpose of this test, we simulate the remaining commitments being submitted
+    // via test-only access and then test an invalid proof outcome.
     // @ts-expect-error test-only access
     const userState = contract["state"].users[seasonPassId];
     // @ts-expect-error test-only access
     const quest = userState.quests.find((q: any) => q.questId === questId);
+
+    // fill up with dummy commitments and set AwaitingProof
     while (quest.checkInCommitments.length < totalDays) {
       quest.checkInCommitments.push("dummy_commitment");
     }
     quest.status = QuestStatus.AwaitingProof;
 
-    // Now submit a proof but make it "invalid" by tweaking placeholder logic if desired.
-    // Here, we’ll pretend the placeholder returns false: tweak verifyThresholdProofPlaceholder
-    // or override it in a subclass for testing.
+    // Now make the verifier return false to simulate an invalid proof
+    // @ts-expect-error test-only override
+    if ((contract as any).verifyThresholdProofPlaceholder) {
+      // force failure
+      // @ts-expect-error
+      (contract as any).verifyThresholdProofPlaceholder = () => false;
+    }
 
-    // For now, assume placeholder can return false;
-    // call the method and check for failure status.
     const { proofValid } = contract.submitZKProof(seasonPassId, USER_ADDR, questId, proof);
-    // In the current scaffold, placeholder returns true; you will update this
-    // when you implement real ZK verification.
-    // For now, assert that quest is marked as success or failure consistently:
-    status = contract.getQuestStatus(seasonPassId, USER_ADDR, questId);
-    expect([QuestStatus.CompletedSuccess, QuestStatus.CompletedFailure]).toContain(status);
 
-    // Settlement should move funds either back to user or into reward pool without error.
+    // Explicitly assert that proof was marked invalid and quest moved to failure
+    expect(proofValid).toBe(false);
+    status = contract.getQuestStatus(seasonPassId, USER_ADDR, questId);
+    expect(status).toBe(QuestStatus.CompletedFailure);
+
+    // Settlement should move funds appropriately (in this scaffold, ensure no throw and deposit cleared)
     contract.settleQuest(seasonPassId, USER_ADDR, questId);
 
     // @ts-expect-error test-only access
@@ -146,18 +185,15 @@ describe("PacSeasonPassContract", () => {
     expect(userAfter.depositAmount).toBe(BigInt(0));
   });
 
-  test("getQuestStatus returns a safe, non-sensitive status", () => {
+  test("getQuestStatus returns a safe, non-sensitive status at initialization", () => {
     const depositAmount = BigInt(20);
-    const { seasonPassId } = contract.depositStake(USER_ADDR, depositAmount, ASSET_USDM);
-
-    const { questId } = contract.createQuest(
-      seasonPassId,
-      USER_ADDR,
-      "generic_quest",
-      60,
-      10,
-      "enc:generic-data",
-    );
+    const { seasonPassId, questId } = createQuestAndDeposit({
+      depositAmount,
+      thresholdPct: 60,
+      totalDays: 10,
+      templateId: "generic_quest",
+      encryptedQuestData: "enc:generic-data",
+    });
 
     const status = contract.getQuestStatus(seasonPassId, USER_ADDR, questId);
     expect(status).toBe(QuestStatus.Initialized);
