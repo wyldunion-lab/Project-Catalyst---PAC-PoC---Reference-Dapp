@@ -8,7 +8,7 @@ A minimal, testable scaffold for a privacy-first accountability dApp on **Midnig
 - **Test vectors** for quests, events, proofs, and expected payouts
 - **Vitest** unit tests for determinism and payout math
 
-## Quick start
+## Quick start 
 
 ```bash
 # From this folder
